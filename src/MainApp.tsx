@@ -12,6 +12,10 @@ import { DirectoryScreen } from './screens/DirectoryScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { QuizScreen } from './screens/QuizScreen';
+import { ApprovalsScreen } from './screens/ApprovalsScreen';
+import { ReportScreen } from './screens/ReportScreen';
+import { ScheduleScreen } from './screens/ScheduleScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { AppHeader } from './ui/AppHeader';
 import { BottomNav } from './ui/BottomNav';
 import { NotificationModal } from './ui/NotificationModal';
@@ -58,15 +62,15 @@ export function MainApp() {
       case 'kelas':
         return <DirectoryScreen api={api} profile={profile} tab={activeTab} />;
       case 'jadwal':
-        return <PlaceholderScreen title="Jadwal" />;
+        return <ScheduleScreen api={api} profile={profile} />;
       case 'laporan':
-        return <PlaceholderScreen title="Laporan" />;
+        return <ReportScreen api={api} profile={profile} />;
       case 'approvals':
-        return <PlaceholderScreen title="Approval" />;
+        return <ApprovalsScreen api={api} profile={profile} />;
       case 'backup':
         return <PlaceholderScreen title="Backup" />;
       case 'pengaturan':
-        return <PlaceholderScreen title="Pengaturan" />;
+        return <SettingsScreen settings={settings} />;
       default:
         return <DashboardScreen api={api} profile={profile} settings={settings} />;
     }
