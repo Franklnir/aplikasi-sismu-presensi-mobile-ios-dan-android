@@ -4,7 +4,7 @@ React Native + Expo app untuk Android dan iOS. Folder ini berdiri sendiri dari f
 
 ## Versi
 
-Versi release saat ini: `1.0.0`.
+Versi release saat ini: `1.0.1`.
 
 ## Setup
 
@@ -35,6 +35,12 @@ npm run build:ios
 ```
 
 Profile Android `preview` menghasilkan APK internal yang bisa diunduh dari EAS. Build iOS membutuhkan akun Apple Developer.
+
+## GitHub Release
+
+Tag `v*` akan menjalankan workflow Android APK. Setelah workflow selesai, APK muncul sebagai asset release GitHub.
+
+Untuk build iOS installable, jalankan workflow `EAS Internal Distribution` setelah menambahkan secret `EXPO_TOKEN` di GitHub dan menyelesaikan konfigurasi Apple Developer di EAS. iOS tidak bisa dibuat sebagai IPA installable tanpa signing Apple.
 
 ## Catatan API
 
