@@ -41,3 +41,6 @@ expo-error.log
 # generated native folders
 /ios
 /android
+
+# local release archives
+releases/
