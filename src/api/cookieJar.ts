@@ -1,8 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const STORAGE_PREFIX = 'edusmart.mobile.cookies.';
 
 type CookieMap = Record<string, string>;
+
+const secureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
 
 const splitSetCookieHeader = (header: string) => {
   const parts: string[] = [];
@@ -42,6 +47,7 @@ const parseCookie = (raw: string) => {
 
 export class CookieJar {
   private cookies: CookieMap = {};
+  private secureStoreAvailable: boolean | null = null;
 
   constructor(private readonly namespace: string) {}
 
@@ -49,19 +55,60 @@ export class CookieJar {
     return `${STORAGE_PREFIX}${this.namespace}`;
   }
 
-  async load() {
-    const raw = await AsyncStorage.getItem(this.storageKey);
-    if (!raw) return;
+  private async canUseSecureStore() {
+    if (this.secureStoreAvailable !== null) return this.secureStoreAvailable;
+    try {
+      this.secureStoreAvailable = await SecureStore.isAvailableAsync();
+    } catch {
+      this.secureStoreAvailable = false;
+    }
+    return this.secureStoreAvailable;
+  }
+
+  private parseStoredCookies(raw: string | null) {
+    if (!raw) return {};
     try {
       const parsed = JSON.parse(raw) as CookieMap;
-      if (parsed && typeof parsed === 'object') this.cookies = parsed;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
     } catch {
-      this.cookies = {};
+      return {};
     }
+  }
+
+  private async persist() {
+    const raw = JSON.stringify(this.cookies);
+    if (await this.canUseSecureStore()) {
+      await SecureStore.setItemAsync(this.storageKey, raw, secureStoreOptions);
+      await AsyncStorage.removeItem(this.storageKey);
+      return;
+    }
+    await AsyncStorage.setItem(this.storageKey, raw);
+  }
+
+  async load() {
+    if (await this.canUseSecureStore()) {
+      const secureRaw = await SecureStore.getItemAsync(this.storageKey, secureStoreOptions);
+      this.cookies = this.parseStoredCookies(secureRaw);
+      if (Object.keys(this.cookies).length > 0) return;
+
+      const legacyRaw = await AsyncStorage.getItem(this.storageKey);
+      const legacyCookies = this.parseStoredCookies(legacyRaw);
+      if (Object.keys(legacyCookies).length > 0) {
+        this.cookies = legacyCookies;
+        await this.persist();
+      }
+      return;
+    }
+
+    const raw = await AsyncStorage.getItem(this.storageKey);
+    this.cookies = this.parseStoredCookies(raw);
   }
 
   async clear() {
     this.cookies = {};
+    if (await this.canUseSecureStore()) {
+      await SecureStore.deleteItemAsync(this.storageKey, secureStoreOptions);
+    }
     await AsyncStorage.removeItem(this.storageKey);
   }
 
@@ -77,7 +124,7 @@ export class CookieJar {
         this.cookies[cookie.name] = cookie.value;
       }
     });
-    await AsyncStorage.setItem(this.storageKey, JSON.stringify(this.cookies));
+    await this.persist();
   }
 
   header() {

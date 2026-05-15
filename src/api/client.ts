@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import type { DbRequest, PickedUploadFile, Profile, School, Settings, User } from '../types';
 import { appConfig, buildApiBaseUrl } from '../config/schools';
 import { CookieJar } from './cookieJar';
@@ -18,10 +19,20 @@ export class ApiError extends Error {
 }
 
 type Json = Record<string, unknown>;
+type QueryParams = Record<string, boolean | number | string | null | undefined>;
 
 const normalizePath = (path: string) => (path.startsWith('/') ? path : `/${path}`);
+const mobileClientHeader = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'mobile';
 
 const schoolNamespace = (school: School) => `${school.slug}:${buildApiBaseUrl(school) || 'default'}`;
+
+const buildQueryString = (params?: QueryParams) => {
+  const entries = Object.entries(params || {}).filter(([, value]) => value !== undefined && value !== null && value !== '');
+  if (!entries.length) return '';
+  const search = new URLSearchParams();
+  entries.forEach(([key, value]) => search.set(key, String(value)));
+  return `?${search.toString()}`;
+};
 
 const getHeader = (headers: Headers, name: string) => {
   try {
@@ -63,6 +74,7 @@ export class EduSmartApi {
   private commonHeaders(extra?: HeadersInit) {
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      'X-EduSmart-Client': mobileClientHeader,
     };
     const cookie = this.cookieJar.header();
     if (cookie) headers.Cookie = cookie;
@@ -102,6 +114,10 @@ export class EduSmartApi {
       skipCsrf?: boolean;
     } = {},
   ): Promise<T> {
+    if (!this.baseUrl) {
+      throw new ApiError('Endpoint sekolah tidak valid atau belum diizinkan untuk aplikasi mobile.', 422, 'INVALID_SCHOOL_ENDPOINT');
+    }
+
     const method = String(options.method || 'GET').toUpperCase();
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const shouldUseCsrf = !options.skipCsrf && method !== 'GET' && method !== 'HEAD';
@@ -133,10 +149,14 @@ export class EduSmartApi {
     if (response.status === 419 && shouldUseCsrf) {
       this.csrfReady = false;
       await this.ensureCsrf(true);
+      const retryHeaders = this.commonHeaders(options.headers);
+      if (options.body !== undefined && options.body !== null && !isFormData) {
+        retryHeaders['Content-Type'] = 'application/json';
+      }
       response = await fetch(`${this.baseUrl}${normalizePath(path)}`, {
         method,
         credentials: 'include',
-        headers: this.commonHeaders(options.headers),
+        headers: retryHeaders,
         body,
       });
       await this.cookieJar.absorb(response.headers);
@@ -195,6 +215,53 @@ export class EduSmartApi {
         onConflict: null,
         ...request,
       },
+    });
+    return raw.data as T;
+  }
+
+  async quizDashboard<T = unknown>(params: QueryParams = {}) {
+    const raw = await this.request<{ data?: T }>(`/api/quiz/dashboard${buildQueryString({ page: 1, per_page: 50, client: 'mobile', ...params })}`, {
+      skipCsrf: true,
+    });
+    return raw.data as T;
+  }
+
+  async quizDetail<T = unknown>(quizId: string | number, params: QueryParams = {}) {
+    const id = encodeURIComponent(String(quizId));
+    const raw = await this.request<{ data?: T }>(`/api/quiz/${id}/detail${buildQueryString({ client: 'mobile', ...params })}`, {
+      skipCsrf: true,
+    });
+    return raw.data as T;
+  }
+
+  async quizStart<T = unknown>(payload: Record<string, unknown>) {
+    const raw = await this.request<{ data?: T }>('/api/quiz/start', {
+      method: 'POST',
+      body: payload,
+    });
+    return raw.data as T;
+  }
+
+  async quizSaveAnswer<T = unknown>(payload: Record<string, unknown>) {
+    const raw = await this.request<{ data?: T }>('/api/quiz/answer', {
+      method: 'POST',
+      body: payload,
+    });
+    return raw.data as T;
+  }
+
+  async quizSubmit<T = unknown>(payload: Record<string, unknown>) {
+    const raw = await this.request<{ data?: T }>('/api/quiz/submit', {
+      method: 'POST',
+      body: payload,
+    });
+    return raw.data as T;
+  }
+
+  async quizViolation<T = unknown>(payload: Record<string, unknown>) {
+    const raw = await this.request<{ data?: T }>('/api/quiz/violation', {
+      method: 'POST',
+      body: payload,
     });
     return raw.data as T;
   }

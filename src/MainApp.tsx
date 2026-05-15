@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { roleMenus, bottomMenuLimit } from './config/menu';
+import { useAppPermissions } from './hooks/useAppPermissions';
 import { useSmartNotifications } from './hooks/useSmartNotifications';
 import { useAuth } from './state/AuthContext';
 import type { AppNotification } from './types';
@@ -19,6 +20,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { AppHeader } from './ui/AppHeader';
 import { BottomNav } from './ui/BottomNav';
 import { NotificationModal } from './ui/NotificationModal';
+import { PermissionPromptModal } from './ui/PermissionPromptModal';
 import { colors } from './ui/theme';
 
 export function MainApp() {
@@ -26,7 +28,12 @@ export function MainApp() {
   const menus = useMemo(() => (profile?.role ? roleMenus[profile.role] : roleMenus.siswa), [profile?.role]);
   const [activeTab, setActiveTab] = useState(menus[0]?.id || 'dashboard');
   const [overflowVisible, setOverflowVisible] = useState(false);
+  const [permissionPromptVisible, setPermissionPromptVisible] = useState(false);
+  const [permissionPromptDismissedFor, setPermissionPromptDismissedFor] = useState<string | null>(null);
+  const [permissionLoading, setPermissionLoading] = useState(false);
+  const { permissions, refresh: refreshPermissions, requestAll: requestAppPermissions } = useAppPermissions();
   const notifications = useSmartNotifications({ api, profile, lastLoginAt });
+  const allPermissionsGranted = permissions.camera && permissions.media && permissions.notifications && permissions.screenCapture;
 
   useEffect(() => {
     if (!menus.some((item) => item.id === activeTab)) {
@@ -34,12 +41,47 @@ export function MainApp() {
     }
   }, [activeTab, menus]);
 
+  useEffect(() => {
+    if (!profile?.id) {
+      setPermissionPromptVisible(false);
+      setPermissionPromptDismissedFor(null);
+      return;
+    }
+    void refreshPermissions();
+  }, [profile?.id, refreshPermissions]);
+
+  useEffect(() => {
+    if (!profile?.id || allPermissionsGranted) {
+      setPermissionPromptVisible(false);
+      return;
+    }
+    if (permissionPromptDismissedFor !== profile.id) {
+      setPermissionPromptVisible(true);
+    }
+  }, [allPermissionsGranted, permissionPromptDismissedFor, profile?.id]);
+
   const bottomItems = menus.slice(0, bottomMenuLimit);
   const overflowItems = menus.slice(bottomMenuLimit);
 
   const openNotification = (item: AppNotification) => {
     if (item.actionTab && menus.some((menu) => menu.id === item.actionTab)) {
       setActiveTab(item.actionTab);
+    }
+  };
+
+  const closePermissionPrompt = () => {
+    setPermissionPromptVisible(false);
+    setPermissionPromptDismissedFor(profile?.id || null);
+  };
+
+  const allowAppPermissions = async () => {
+    setPermissionLoading(true);
+    try {
+      await requestAppPermissions();
+      setPermissionPromptDismissedFor(profile?.id || null);
+      setPermissionPromptVisible(false);
+    } finally {
+      setPermissionLoading(false);
     }
   };
 
@@ -97,6 +139,13 @@ export function MainApp() {
           items={notifications.items}
           onClose={() => notifications.setPopupVisible(false)}
           onOpenItem={openNotification}
+        />
+        <PermissionPromptModal
+          visible={permissionPromptVisible}
+          permissions={permissions}
+          loading={permissionLoading}
+          onAllow={() => void allowAppPermissions()}
+          onClose={closePermissionPrompt}
         />
       </View>
     </SafeAreaView>

@@ -1,6 +1,6 @@
 {
   "name": "mobile-app",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -20,6 +20,8 @@
     "expo-image-manipulator": "~14.0.8",
     "expo-image-picker": "~17.0.11",
     "expo-notifications": "~0.32.17",
+    "expo-screen-capture": "~8.0.9",
+    "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "lucide-react-native": "^1.14.0",
     "react": "19.1.0",

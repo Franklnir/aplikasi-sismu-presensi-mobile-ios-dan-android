@@ -4,7 +4,7 @@ React Native + Expo app untuk Android dan iOS. Folder ini berdiri sendiri dari f
 
 ## Versi
 
-Versi release saat ini: `1.0.1`.
+Versi release saat ini: `1.0.2`.
 
 ## Setup
 
@@ -16,11 +16,13 @@ npm run start
 
 Isi `.env` sesuai domain produksi. Untuk multi sekolah, app memakai subdomain sekolah lewat `EXPO_PUBLIC_API_BASE_URL=https://{slug}.domain.com` atau `EXPO_PUBLIC_ROOT_DOMAIN=domain.com`.
 
+Untuk domain kustom di luar root domain, isi `EXPO_PUBLIC_ALLOWED_API_HOSTS=sekolah.sch.id,api.domain-lain.id`. Jangan aktifkan `EXPO_PUBLIC_ALLOW_INSECURE_API=true` di build production.
+
 ## Fitur
 
 - Pilih sekolah berdasarkan nama/subdomain, dengan super admin/admin reserved slug tidak ditampilkan.
 - Login untuk role `admin`, `guru`, dan `siswa`.
-- Sesi tersimpan, jadi user tidak perlu login ulang kecuali logout.
+- Sesi tersimpan di SecureStore/Keychain-Keystore, jadi user tidak perlu login ulang kecuali logout.
 - Header profil berisi foto, nama, kelas/semester/angkatan, notifikasi dengan badge, dan menu overflow.
 - Bottom navigation maksimal 5 menu; sisanya muncul dari tombol garis tiga di header.
 - Pop-up notifikasi untuk deadline tugas, tugas mendatang, pengumuman baru, dan aktivitas login.
@@ -34,7 +36,7 @@ npm run build:android
 npm run build:ios
 ```
 
-Profile Android `preview` menghasilkan APK internal yang bisa diunduh dari EAS. Build iOS membutuhkan akun Apple Developer.
+APK Android juga dibuat otomatis saat tag `v*` dipush ke GitHub. Profile Android `preview` menghasilkan APK internal yang bisa diunduh dari EAS. Build iOS membutuhkan akun Apple Developer.
 
 ## GitHub Release
 

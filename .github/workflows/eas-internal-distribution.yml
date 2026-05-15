@@ -3,6 +3,9 @@ name: EAS Internal Distribution
 on:
   workflow_dispatch:
 
+env:
+  NODE_VERSION: 20.19.4
+
 jobs:
   submit-eas-builds:
     name: Submit Android and iOS builds to EAS
@@ -15,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Setup Expo and EAS
@@ -26,6 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Submit internal builds
         run: eas build --platform all --profile preview --non-interactive --no-wait

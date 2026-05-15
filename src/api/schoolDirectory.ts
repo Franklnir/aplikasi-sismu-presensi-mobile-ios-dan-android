@@ -1,5 +1,11 @@
 import type { School } from '../types';
-import { appConfig, isReservedSchool, normalizeSlug, parseStaticSchools } from '../config/schools';
+import {
+  isReservedSchool,
+  isTrustedSchoolEndpoint,
+  normalizeSlug,
+  parseStaticSchools,
+  trustedDirectoryUrl,
+} from '../config/schools';
 
 const normalizeSchool = (row: Partial<School>): School | null => {
   const slug = normalizeSlug(String(row.slug || ''));
@@ -14,7 +20,7 @@ const normalizeSchool = (row: Partial<School>): School | null => {
     host: row.host ? String(row.host) : undefined,
     status: row.status ? String(row.status) : undefined,
   };
-  return isReservedSchool(school) ? null : school;
+  return isReservedSchool(school) || !isTrustedSchoolEndpoint(school) ? null : school;
 };
 
 const schoolMatches = (school: School, query: string) => {
@@ -27,9 +33,10 @@ export const searchSchools = async (query: string): Promise<School[]> => {
   const staticSchools = parseStaticSchools();
   const q = query.trim();
 
-  if (appConfig.schoolDirectoryUrl) {
+  const directoryUrl = trustedDirectoryUrl();
+  if (directoryUrl) {
     try {
-      const url = new URL(appConfig.schoolDirectoryUrl);
+      const url = new URL(directoryUrl);
       url.searchParams.set('search', q);
       const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
       const json = (await response.json()) as { data?: unknown } | unknown[];
@@ -54,7 +61,7 @@ export const searchSchools = async (query: string): Promise<School[]> => {
         name: q,
         slug,
       },
-    ].filter((school) => !isReservedSchool(school));
+    ].filter((school) => !isReservedSchool(school) && isTrustedSchoolEndpoint(school));
   }
 
   return [];

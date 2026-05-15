@@ -11,6 +11,87 @@ export const appConfig = {
   schoolDirectoryUrl: env('EXPO_PUBLIC_SCHOOL_DIRECTORY_URL'),
   tenantHeaderEnabled: env('EXPO_PUBLIC_TENANT_HEADER_ENABLED').toLowerCase() === 'true',
   tenantHeaderName: env('EXPO_PUBLIC_TENANT_HEADER_NAME') || 'X-Tenant',
+  allowInsecureApi: env('EXPO_PUBLIC_ALLOW_INSECURE_API').toLowerCase() === 'true',
+  allowedApiHosts: env('EXPO_PUBLIC_ALLOWED_API_HOSTS')
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean),
+};
+
+const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const hostMatches = (host: string, allowedHost: string) =>
+  host === allowedHost || host.endsWith(`.${allowedHost}`);
+
+const isLocalHost = (host: string) =>
+  host === 'localhost' ||
+  host === '127.0.0.1' ||
+  host === '10.0.2.2' ||
+  host.endsWith('.localhost') ||
+  host.endsWith('.127.0.0.1.nip.io');
+
+const parseConfiguredHostRule = (value: string, fallbackScheme = appConfig.apiScheme) => {
+  const raw = value.trim();
+  if (!raw) return null;
+
+  try {
+    const slugToken = 'edusmart-school';
+    const hasSlugTemplate = /\{slug\}/i.test(raw);
+    const tokenized = raw.replace(/\{slug\}/gi, slugToken);
+    const withScheme = /^https?:\/\//i.test(tokenized) ? tokenized : `${fallbackScheme}://${tokenized}`;
+    const host = new URL(withScheme).hostname.toLowerCase();
+    if (!host) return null;
+
+    const labels = host.split('.');
+    const slugIndex = labels.indexOf(slugToken);
+    const suffix = hasSlugTemplate && slugIndex >= 0 && labels.length > slugIndex + 1
+      ? `.${labels.slice(slugIndex + 1).join('.')}`
+      : '';
+
+    return { host, suffix };
+  } catch {
+    return null;
+  }
+};
+
+const configuredHostRules = () => [
+  parseConfiguredHostRule(appConfig.apiBaseUrl),
+  parseConfiguredHostRule(appConfig.schoolDirectoryUrl),
+].filter((item): item is { host: string; suffix: string } => Boolean(item));
+
+const matchesConfiguredHostRule = (host: string, rule: { host: string; suffix: string }) =>
+  host === rule.host || Boolean(rule.suffix && host.endsWith(rule.suffix) && host.length > rule.suffix.length);
+
+const isAllowedApiHost = (host: string) => {
+  const normalizedHost = host.toLowerCase().trim();
+  if (!normalizedHost) return false;
+  if (isLocalHost(normalizedHost)) return true;
+
+  const root = appConfig.rootDomain.toLowerCase().trim();
+  if (root && hostMatches(normalizedHost, root)) return true;
+  if (configuredHostRules().some((rule) => matchesConfiguredHostRule(normalizedHost, rule))) return true;
+
+  return appConfig.allowedApiHosts.some((allowedHost) => hostMatches(normalizedHost, allowedHost));
+};
+
+const normalizeTrustedUrl = (value: string, fallbackScheme = appConfig.apiScheme) => {
+  const raw = value.trim();
+  if (!raw) return '';
+
+  try {
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `${fallbackScheme}://${raw}`;
+    const url = new URL(withScheme);
+    const host = url.hostname.toLowerCase();
+    const scheme = url.protocol.replace(':', '').toLowerCase();
+
+    if (!['http', 'https'].includes(scheme)) return '';
+    if (scheme !== 'https' && !(appConfig.allowInsecureApi || isLocalHost(host))) return '';
+    if (!isAllowedApiHost(host)) return '';
+
+    return stripTrailingSlash(url.toString());
+  } catch {
+    return '';
+  }
 };
 
 export const normalizeSlug = (value: string) =>
@@ -43,29 +124,32 @@ export const parseStaticSchools = (): School[] => {
           name,
           slug,
           logoUrl: row.logoUrl ? String(row.logoUrl) : undefined,
-          apiBaseUrl: row.apiBaseUrl ? String(row.apiBaseUrl) : undefined,
-          host: row.host ? String(row.host) : undefined,
+          apiBaseUrl: row.apiBaseUrl ? normalizeTrustedUrl(String(row.apiBaseUrl)) || undefined : undefined,
+          host: row.host ? normalizeTrustedUrl(String(row.host)).replace(/^https?:\/\//i, '') || undefined : undefined,
           status: row.status ? String(row.status) : undefined,
         };
         return school;
       })
-      .filter((item): item is School => Boolean(item && !isReservedSchool(item)));
+      .filter((item): item is School => Boolean(item && !isReservedSchool(item) && isTrustedSchoolEndpoint(item)));
   } catch {
     return [];
   }
 };
 
 export const buildApiBaseUrl = (school: School): string => {
-  if (school.apiBaseUrl) return school.apiBaseUrl.replace(/\/+$/, '');
+  if (school.apiBaseUrl) return normalizeTrustedUrl(school.apiBaseUrl);
   if (school.host) {
-    const hasScheme = /^https?:\/\//i.test(school.host);
-    return `${hasScheme ? '' : `${appConfig.apiScheme}://`}${school.host}`.replace(/\/+$/, '');
+    return normalizeTrustedUrl(school.host);
   }
   if (appConfig.apiBaseUrl.includes('{slug}')) {
-    return appConfig.apiBaseUrl.replace('{slug}', school.slug).replace(/\/+$/, '');
+    return normalizeTrustedUrl(appConfig.apiBaseUrl.replace('{slug}', school.slug));
   }
   if (appConfig.rootDomain) {
-    return `${appConfig.apiScheme}://${school.slug}.${appConfig.rootDomain}`.replace(/\/+$/, '');
+    return normalizeTrustedUrl(`${appConfig.apiScheme}://${school.slug}.${appConfig.rootDomain}`);
   }
-  return appConfig.apiBaseUrl.replace(/\/+$/, '');
+  return normalizeTrustedUrl(appConfig.apiBaseUrl);
 };
+
+export const isTrustedSchoolEndpoint = (school: School) => buildApiBaseUrl(school) !== '';
+
+export const trustedDirectoryUrl = () => normalizeTrustedUrl(appConfig.schoolDirectoryUrl);

@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_VERSION: 20.19.4
+
 jobs:
   build-android-apk:
     name: Build Android APK
@@ -21,7 +24,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Setup Java
@@ -33,12 +36,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install
 
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
 
       - name: Prepare APK
         shell: bash

@@ -2,7 +2,7 @@
   "expo": {
     "name": "EduSmart Mobile",
     "slug": "edusmart-mobile",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,6 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "id.edusmart.mobile",
+      "buildNumber": "2",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "NSCameraUsageDescription": "Aplikasi membutuhkan kamera untuk mengambil foto tugas dan scan kehadiran.",
         "NSPhotoLibraryUsageDescription": "Aplikasi membutuhkan galeri untuk memilih foto jawaban tugas.",
@@ -23,6 +27,7 @@
     },
     "android": {
       "package": "id.edusmart.mobile",
+      "versionCode": 2,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
@@ -37,6 +42,12 @@
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
       [
         "expo-image-picker",
         {
