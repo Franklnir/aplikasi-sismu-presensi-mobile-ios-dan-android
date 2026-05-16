@@ -2,7 +2,7 @@
   "expo": {
     "name": "EduSmart Mobile",
     "slug": "edusmart-mobile",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "id.edusmart.mobile",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "id.edusmart.mobile",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",

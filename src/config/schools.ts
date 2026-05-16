@@ -1,14 +1,17 @@
 import type { School } from '../types';
 
 const reservedSlugs = new Set(['super', 'super-admin', 'admin', 'admin26', 'app', 'api', 'www']);
+const DEFAULT_ROOT_DOMAIN = 'sismu.biz.id';
+const DEFAULT_API_BASE_URL = `https://{slug}.${DEFAULT_ROOT_DOMAIN}`;
+const DEFAULT_SCHOOL_DIRECTORY_URL = `https://admin26.${DEFAULT_ROOT_DOMAIN}/api/mobile/schools`;
 
 const env = (key: string) => String(process.env[key] || '').trim();
 
 export const appConfig = {
-  apiBaseUrl: env('EXPO_PUBLIC_API_BASE_URL'),
-  rootDomain: env('EXPO_PUBLIC_ROOT_DOMAIN'),
+  apiBaseUrl: env('EXPO_PUBLIC_API_BASE_URL') || DEFAULT_API_BASE_URL,
+  rootDomain: env('EXPO_PUBLIC_ROOT_DOMAIN') || DEFAULT_ROOT_DOMAIN,
   apiScheme: env('EXPO_PUBLIC_API_SCHEME') || 'https',
-  schoolDirectoryUrl: env('EXPO_PUBLIC_SCHOOL_DIRECTORY_URL'),
+  schoolDirectoryUrl: env('EXPO_PUBLIC_SCHOOL_DIRECTORY_URL') || DEFAULT_SCHOOL_DIRECTORY_URL,
   tenantHeaderEnabled: env('EXPO_PUBLIC_TENANT_HEADER_ENABLED').toLowerCase() === 'true',
   tenantHeaderName: env('EXPO_PUBLIC_TENANT_HEADER_NAME') || 'X-Tenant',
   allowInsecureApi: env('EXPO_PUBLIC_ALLOW_INSECURE_API').toLowerCase() === 'true',

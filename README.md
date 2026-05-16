@@ -4,7 +4,7 @@ React Native + Expo app untuk Android dan iOS. Folder ini berdiri sendiri dari f
 
 ## Versi
 
-Versi release saat ini: `1.0.2`.
+Versi release saat ini: `1.0.3`.
 
 ## Setup
 
@@ -14,7 +14,7 @@ cp .env.example .env
 npm run start
 ```
 
-Isi `.env` sesuai domain produksi. Untuk multi sekolah, app memakai subdomain sekolah lewat `EXPO_PUBLIC_API_BASE_URL=https://{slug}.domain.com` atau `EXPO_PUBLIC_ROOT_DOMAIN=domain.com`.
+Default build produksi memakai `sismu.biz.id`. Jika ingin memakai domain lain, isi `.env` sesuai domain produksi. Untuk multi sekolah, app memakai subdomain sekolah lewat `EXPO_PUBLIC_API_BASE_URL=https://{slug}.domain.com` atau `EXPO_PUBLIC_ROOT_DOMAIN=domain.com`.
 
 Untuk domain kustom di luar root domain, isi `EXPO_PUBLIC_ALLOWED_API_HOSTS=sekolah.sch.id,api.domain-lain.id`. Jangan aktifkan `EXPO_PUBLIC_ALLOW_INSECURE_API=true` di build production.
 
