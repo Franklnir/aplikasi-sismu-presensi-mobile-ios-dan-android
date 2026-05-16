@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { MenuItem } from '../types';
 import { AppIcon } from './Icon';
 import { colors, shadow } from './theme';
@@ -13,16 +13,19 @@ export function BottomNav({
   active: string;
   onChange: (id: string) => void;
 }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 360;
+
   return (
     <View style={styles.wrap}>
       {items.map((item) => {
         const selected = active === item.id;
         return (
           <Pressable key={item.id} style={styles.item} onPress={() => onChange(item.id)}>
-            <View style={[styles.iconSlot, selected && styles.iconSelected]}>
-              <AppIcon name={item.icon} size={20} color={selected ? '#fff' : colors.muted} />
+            <View style={[styles.iconSlot, compact && styles.iconSlotCompact, selected && styles.iconSelected]}>
+              <AppIcon name={item.icon} size={compact ? 18 : 20} color={selected ? '#fff' : colors.muted} />
             </View>
-            <Text style={[styles.label, selected && styles.labelSelected]} numberOfLines={1}>
+            <Text style={[styles.label, compact && styles.labelCompact, selected && styles.labelSelected]} numberOfLines={1}>
               {item.label}
             </Text>
           </Pressable>
@@ -58,6 +61,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconSlotCompact: {
+    width: 30,
+    height: 28,
+  },
   iconSelected: {
     backgroundColor: colors.primary,
   },
@@ -66,6 +73,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     maxWidth: '100%',
+  },
+  labelCompact: {
+    fontSize: 10,
   },
   labelSelected: {
     color: colors.primaryDark,

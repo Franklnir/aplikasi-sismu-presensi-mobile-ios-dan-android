@@ -105,7 +105,9 @@ export type MenuItem = {
     | 'megaphone'
     | 'check'
     | 'backup'
-    | 'scan';
+    | 'scan'
+    | 'globe'
+    | 'external';
   role: Role;
 };
 

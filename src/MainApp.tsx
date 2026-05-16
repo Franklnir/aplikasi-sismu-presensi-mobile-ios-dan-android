@@ -6,11 +6,11 @@ import { useSmartNotifications } from './hooks/useSmartNotifications';
 import { useAuth } from './state/AuthContext';
 import type { AppNotification } from './types';
 import { AnnouncementsScreen } from './screens/AnnouncementsScreen';
+import { AdminWebScreen } from './screens/AdminWebScreen';
 import { AssignmentsScreen } from './screens/AssignmentsScreen';
 import { AttendanceScreen } from './screens/AttendanceScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { DirectoryScreen } from './screens/DirectoryScreen';
-import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { QuizScreen } from './screens/QuizScreen';
 import { ApprovalsScreen } from './screens/ApprovalsScreen';
@@ -109,8 +109,8 @@ export function MainApp() {
         return <ReportScreen api={api} profile={profile} />;
       case 'approvals':
         return <ApprovalsScreen api={api} profile={profile} />;
-      case 'backup':
-        return <PlaceholderScreen title="Backup" />;
+      case 'webadmin':
+        return <AdminWebScreen />;
       case 'pengaturan':
         return <SettingsScreen settings={settings} />;
       default:

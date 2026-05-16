@@ -26,7 +26,7 @@ export const roleMenus: Record<Role, MenuItem[]> = {
     { id: 'absensi', label: 'Scan', icon: 'scan', role: 'admin' },
     { id: 'pengumuman', label: 'Info', icon: 'megaphone', role: 'admin' },
     { id: 'approvals', label: 'Approval', icon: 'shield', role: 'admin' },
-    { id: 'backup', label: 'Backup', icon: 'backup', role: 'admin' },
+    { id: 'webadmin', label: 'Web Admin', icon: 'globe', role: 'admin' },
     { id: 'pengaturan', label: 'Pengaturan', icon: 'settings', role: 'admin' },
     { id: 'profil', label: 'Profil', icon: 'user', role: 'admin' },
   ],

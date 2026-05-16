@@ -18,6 +18,7 @@ type AuthContextValue = {
   selectSchool: (school: School) => Promise<void>;
   clearSchool: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogleTicket: (ticket: string) => Promise<void>;
   refreshSession: () => Promise<AuthSession | null>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -174,6 +175,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [api, applySession],
   );
 
+  const loginWithGoogleTicket = useCallback(
+    async (ticket: string) => {
+      if (!api) throw new Error('Sekolah belum dipilih');
+      setLoading(true);
+      setError('');
+      try {
+        const session = normalizeSession(await api.googleMobileExchange(ticket.trim()));
+        if (!session) throw new Error('Data sesi login Google tidak lengkap');
+        if (String(session.profile.status || '').toLowerCase() === 'nonaktif') {
+          await api.clearSession();
+          throw new Error('Akun ini dinonaktifkan. Hubungi administrator.');
+        }
+        const hydratedSession = normalizeSession(await api.authMe().catch(() => null)) || session;
+        applySession(hydratedSession);
+        const now = new Date().toISOString();
+        setLastLoginAt(now);
+        await AsyncStorage.setItem(LAST_LOGIN_KEY, now);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Login Google gagal';
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api, applySession],
+  );
+
   const logout = useCallback(async () => {
     setLoading(true);
     try {
@@ -198,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       selectSchool,
       clearSchool,
       login,
+      loginWithGoogleTicket,
       refreshSession,
       logout,
       clearError: () => setError(''),
@@ -215,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       selectSchool,
       clearSchool,
       login,
+      loginWithGoogleTicket,
       refreshSession,
       logout,
     ],

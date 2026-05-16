@@ -14,6 +14,7 @@ export const appConfig = {
   schoolDirectoryUrl: env('EXPO_PUBLIC_SCHOOL_DIRECTORY_URL') || DEFAULT_SCHOOL_DIRECTORY_URL,
   tenantHeaderEnabled: env('EXPO_PUBLIC_TENANT_HEADER_ENABLED').toLowerCase() === 'true',
   tenantHeaderName: env('EXPO_PUBLIC_TENANT_HEADER_NAME') || 'X-Tenant',
+  googleRedirectUri: env('EXPO_PUBLIC_GOOGLE_REDIRECT_URI') || 'edusmart-presensi://google-auth',
   allowInsecureApi: env('EXPO_PUBLIC_ALLOW_INSECURE_API').toLowerCase() === 'true',
   allowedApiHosts: env('EXPO_PUBLIC_ALLOWED_API_HOSTS')
     .split(',')

@@ -4,7 +4,7 @@ React Native + Expo app untuk Android dan iOS. Folder ini berdiri sendiri dari f
 
 ## Versi
 
-Versi release saat ini: `1.0.4`.
+Versi release saat ini: `1.1.0`.
 
 ## Setup
 
@@ -21,7 +21,8 @@ Untuk domain kustom di luar root domain, isi `EXPO_PUBLIC_ALLOWED_API_HOSTS=seko
 ## Fitur
 
 - Pilih sekolah berdasarkan nama/subdomain, dengan super admin/admin reserved slug tidak ditampilkan.
-- Login untuk role `admin`, `guru`, dan `siswa`.
+- Login Email/NIS atau Google untuk role `admin`, `guru`, dan `siswa`.
+- Web Admin untuk fitur berat seperti backup, audit trail, WhatsApp, sertifikat, dan pengaturan lengkap.
 - Sesi tersimpan di SecureStore/Keychain-Keystore, jadi user tidak perlu login ulang kecuali logout.
 - Header profil berisi foto, nama, kelas/semester/angkatan, notifikasi dengan badge, dan menu overflow.
 - Bottom navigation maksimal 5 menu; sisanya muncul dari tombol garis tiga di header.
@@ -50,6 +51,8 @@ App ini mengikuti API Laravel yang sudah ada:
 
 - `GET /sanctum/csrf-cookie`
 - `POST /api/auth/login`
+- `GET /api/auth/google/mobile/redirect`
+- `POST /api/auth/google/mobile/exchange`
 - `GET /api/auth/me`
 - `POST /api/auth/logout`
 - `POST /api/db`

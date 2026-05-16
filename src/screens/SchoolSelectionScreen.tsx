@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { resolveSchoolBySlug, searchSchools } from '../api/schoolDirectory';
 import { appConfig, buildApiBaseUrl, normalizeSlug } from '../config/schools';
+import { useResponsiveFrame } from '../hooks/useResponsiveFrame';
 import { useAuth } from '../state/AuthContext';
 import type { School } from '../types';
 import { AppIcon } from '../ui/Icon';
@@ -35,6 +36,7 @@ export function SchoolSelectionScreen() {
   const [searching, setSearching] = useState(false);
   const [manualLoading, setManualLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const frameStyle = useResponsiveFrame(560);
 
   const normalizedQuerySlug = useMemo(() => normalizeSlug(query), [query]);
 
@@ -97,91 +99,93 @@ export function SchoolSelectionScreen() {
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={searching} onRefresh={() => void loadSchools(query.trim())} />}
       >
-        <View style={styles.hero}>
-          <View style={styles.logo}>
-            <AppIcon name="school" size={34} color="#fff" />
-          </View>
-          <Text style={styles.kicker}>EduSmart Presensi</Text>
-          <Text style={styles.title}>Pilih Sekolah</Text>
-          <Text style={styles.subtitle}>
-            Cari sekolah yang sudah terdaftar, pilih subdomainnya, lalu masuk dengan akun sekolah tersebut.
-          </Text>
-        </View>
-
-        <View style={styles.searchBox}>
-          <AppIcon name="search" size={20} color={colors.muted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Nama sekolah atau subdomain"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-            placeholderTextColor="#8A96A8"
-            returnKeyType="search"
-          />
-          {searching ? <ActivityIndicator size="small" color={authColors.primary} /> : null}
-        </View>
-
-        <View style={styles.hintRow}>
-          <AppIcon name="globe" size={15} color={authColors.primary} />
-          <Text style={styles.hintText}>
-            Domain produksi: {appConfig.rootDomain || 'sismu.biz.id'}
-          </Text>
-        </View>
-
-        {message ? <Text style={styles.warning}>{message}</Text> : null}
-
-        <View style={styles.resultsHeader}>
-          <Text style={styles.resultsTitle}>{query.trim() ? 'Hasil Pencarian' : 'Sekolah Aktif'}</Text>
-          <Text style={styles.resultsCount}>{results.length} sekolah</Text>
-        </View>
-
-        <View style={styles.results}>
-          {results.map((school) => (
-            <Pressable
-              key={`${school.slug}-${school.apiBaseUrl || school.host || ''}`}
-              style={({ pressed }) => [styles.schoolRow, pressed && styles.pressed]}
-              onPress={() => void chooseSchool(school)}
-              disabled={loading}
-            >
-              {school.logoUrl ? (
-                <Image source={{ uri: school.logoUrl }} style={styles.schoolLogo} />
-              ) : (
-                <View style={styles.schoolLogoFallback}>
-                  <AppIcon name="school" size={22} color={authColors.primary} />
-                </View>
-              )}
-              <View style={styles.schoolInfo}>
-                <Text style={styles.schoolName} numberOfLines={1}>{school.name}</Text>
-                <Text style={styles.schoolSlug} numberOfLines={1}>{school.slug}</Text>
-                <Text style={styles.schoolHost} numberOfLines={1}>{schoolUrl(school)}</Text>
-              </View>
-              <View style={styles.pickBadge}>
-                <Text style={styles.pickText}>Pilih</Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-
-        {!searching && results.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>Sekolah belum tampil</Text>
-            <Text style={styles.emptyBody}>
-              Pastikan sekolah sudah dibuat di panel super admin dan subdomainnya aktif.
+        <View style={[frameStyle, styles.frame]}>
+          <View style={styles.hero}>
+            <View style={styles.logo}>
+              <AppIcon name="school" size={34} color="#fff" />
+            </View>
+            <Text style={styles.kicker}>EduSmart Presensi</Text>
+            <Text style={styles.title}>Pilih Sekolah</Text>
+            <Text style={styles.subtitle}>
+              Cari sekolah yang sudah terdaftar, pilih subdomainnya, lalu masuk dengan akun sekolah tersebut.
             </Text>
-            {canTrySubdomain ? (
-              <Pressable
-                style={({ pressed }) => [styles.manualButton, pressed && styles.pressed]}
-                onPress={() => void chooseSubdomain()}
-                disabled={manualLoading || loading}
-              >
-                {manualLoading ? <ActivityIndicator size="small" color="#fff" /> : <AppIcon name="globe" size={17} color="#fff" />}
-                <Text style={styles.manualText}>Cek subdomain {normalizedQuerySlug}</Text>
-              </Pressable>
-            ) : null}
           </View>
-        ) : null}
+
+          <View style={styles.searchBox}>
+            <AppIcon name="search" size={20} color={colors.muted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Nama sekolah atau subdomain"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+              placeholderTextColor="#8A96A8"
+              returnKeyType="search"
+            />
+            {searching ? <ActivityIndicator size="small" color={authColors.primary} /> : null}
+          </View>
+
+          <View style={styles.hintRow}>
+            <AppIcon name="globe" size={15} color={authColors.primary} />
+            <Text style={styles.hintText}>
+              Domain produksi: {appConfig.rootDomain || 'sismu.biz.id'}
+            </Text>
+          </View>
+
+          {message ? <Text style={styles.warning}>{message}</Text> : null}
+
+          <View style={styles.resultsHeader}>
+            <Text style={styles.resultsTitle}>{query.trim() ? 'Hasil Pencarian' : 'Sekolah Aktif'}</Text>
+            <Text style={styles.resultsCount}>{results.length} sekolah</Text>
+          </View>
+
+          <View style={styles.results}>
+            {results.map((school) => (
+              <Pressable
+                key={`${school.slug}-${school.apiBaseUrl || school.host || ''}`}
+                style={({ pressed }) => [styles.schoolRow, pressed && styles.pressed]}
+                onPress={() => void chooseSchool(school)}
+                disabled={loading}
+              >
+                {school.logoUrl ? (
+                  <Image source={{ uri: school.logoUrl }} style={styles.schoolLogo} />
+                ) : (
+                  <View style={styles.schoolLogoFallback}>
+                    <AppIcon name="school" size={22} color={authColors.primary} />
+                  </View>
+                )}
+                <View style={styles.schoolInfo}>
+                  <Text style={styles.schoolName} numberOfLines={1}>{school.name}</Text>
+                  <Text style={styles.schoolSlug} numberOfLines={1}>{school.slug}</Text>
+                  <Text style={styles.schoolHost} numberOfLines={1}>{schoolUrl(school)}</Text>
+                </View>
+                <View style={styles.pickBadge}>
+                  <Text style={styles.pickText}>Pilih</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+
+          {!searching && results.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyTitle}>Sekolah belum tampil</Text>
+              <Text style={styles.emptyBody}>
+                Pastikan sekolah sudah dibuat di panel super admin dan subdomainnya aktif.
+              </Text>
+              {canTrySubdomain ? (
+                <Pressable
+                  style={({ pressed }) => [styles.manualButton, pressed && styles.pressed]}
+                  onPress={() => void chooseSubdomain()}
+                  disabled={manualLoading || loading}
+                >
+                  {manualLoading ? <ActivityIndicator size="small" color="#fff" /> : <AppIcon name="globe" size={17} color="#fff" />}
+                  <Text style={styles.manualText}>Cek subdomain {normalizedQuerySlug}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -194,9 +198,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    padding: 20,
     paddingTop: 72,
     paddingBottom: 34,
+  },
+  frame: {
     gap: 14,
   },
   hero: {

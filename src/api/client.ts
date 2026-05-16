@@ -193,6 +193,23 @@ export class EduSmartApi {
     return raw.data || null;
   }
 
+  googleMobileRedirectUrl(redirectUri: string) {
+    const url = new URL(`${this.baseUrl}/api/auth/google/mobile/redirect`);
+    url.searchParams.set('redirect_uri', redirectUri);
+    return url.toString();
+  }
+
+  async googleMobileExchange(ticket: string) {
+    const raw = await this.request<{ data?: { user?: User; profile?: Profile; settings?: Settings; is_super_admin?: boolean } }>(
+      '/api/auth/google/mobile/exchange',
+      {
+        method: 'POST',
+        body: { ticket },
+      },
+    );
+    return raw.data || null;
+  }
+
   async logout() {
     try {
       await this.request('/api/auth/logout', { method: 'POST', body: {} });
