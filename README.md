@@ -4,7 +4,7 @@ React Native + Expo app untuk Android dan iOS. Folder ini berdiri sendiri dari f
 
 ## Versi
 
-Versi release saat ini: `1.0.3`.
+Versi release saat ini: `1.0.4`.
 
 ## Setup
 

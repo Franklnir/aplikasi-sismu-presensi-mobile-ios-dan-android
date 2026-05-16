@@ -154,7 +154,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const session = normalizeSession(await api.login(email.trim(), password));
         if (!session) throw new Error('Data sesi login tidak lengkap');
-        applySession(session);
+        if (String(session.profile.status || '').toLowerCase() === 'nonaktif') {
+          await api.clearSession();
+          throw new Error('Akun ini dinonaktifkan. Hubungi administrator.');
+        }
+        const hydratedSession = normalizeSession(await api.authMe().catch(() => null)) || session;
+        applySession(hydratedSession);
         const now = new Date().toISOString();
         setLastLoginAt(now);
         await AsyncStorage.setItem(LAST_LOGIN_KEY, now);

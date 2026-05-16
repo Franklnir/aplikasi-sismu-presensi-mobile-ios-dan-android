@@ -1,5 +1,6 @@
 import type { School } from '../types';
 import {
+  buildApiBaseUrl,
   isReservedSchool,
   isTrustedSchoolEndpoint,
   normalizeSlug,
@@ -29,6 +30,20 @@ const schoolMatches = (school: School, query: string) => {
   return school.name.toLowerCase().includes(q) || school.slug.toLowerCase().includes(q);
 };
 
+const endpointLooksHealthy = async (school: School) => {
+  const baseUrl = buildApiBaseUrl(school);
+  if (!baseUrl) return false;
+
+  try {
+    const response = await fetch(`${baseUrl}/api/health`, {
+      headers: { Accept: 'application/json' },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
 export const searchSchools = async (query: string): Promise<School[]> => {
   const staticSchools = parseStaticSchools();
   const q = query.trim();
@@ -51,18 +66,24 @@ export const searchSchools = async (query: string): Promise<School[]> => {
   }
 
   const filtered = staticSchools.filter((school) => schoolMatches(school, q)).slice(0, 12);
-  if (filtered.length > 0) return filtered;
+  return filtered;
+};
 
+export const resolveSchoolBySlug = async (query: string): Promise<School | null> => {
+  const q = query.trim();
   const slug = normalizeSlug(q);
-  if (slug && slug.length >= 2) {
-    return [
-      {
-        id: slug,
-        name: q,
-        slug,
-      },
-    ].filter((school) => !isReservedSchool(school) && isTrustedSchoolEndpoint(school));
+  if (!slug || slug.length < 2) return null;
+
+  const school: School = {
+    id: slug,
+    name: query.trim() || slug,
+    slug,
+  };
+
+  if (isReservedSchool(school) || !isTrustedSchoolEndpoint(school)) return null;
+  if (await endpointLooksHealthy(school)) {
+    return school;
   }
 
-  return [];
+  return null;
 };

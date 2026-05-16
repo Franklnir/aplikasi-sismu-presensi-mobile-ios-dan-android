@@ -6,15 +6,21 @@ import {
   ChartColumn,
   CheckCircle2,
   CloudDownload,
+  Eye,
+  EyeOff,
+  Globe2,
   Home,
+  LockKeyhole,
   LucideProps,
   Megaphone,
   Menu,
   Pencil,
   QrCode,
   School,
+  Search,
   Settings,
   ShieldCheck,
+  LogIn,
   User,
   Users,
 } from 'lucide-react-native';
@@ -23,7 +29,18 @@ import type { MenuItem } from '../types';
 export const AppIcon = ({
   name,
   ...props
-}: LucideProps & { name: MenuItem['icon'] | 'bell' | 'menu' }) => {
+}: LucideProps & {
+  name:
+    | MenuItem['icon']
+    | 'bell'
+    | 'eye'
+    | 'eyeOff'
+    | 'globe'
+    | 'lock'
+    | 'login'
+    | 'menu'
+    | 'search';
+}) => {
   const map = {
     home: Home,
     calendar: CalendarDays,
@@ -41,7 +58,13 @@ export const AppIcon = ({
     backup: CloudDownload,
     scan: QrCode,
     bell: Bell,
+    eye: Eye,
+    eyeOff: EyeOff,
+    globe: Globe2,
+    lock: LockKeyhole,
+    login: LogIn,
     menu: Menu,
+    search: Search,
   };
   const Icon = map[name];
   return <Icon {...props} />;
